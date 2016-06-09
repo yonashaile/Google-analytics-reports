@@ -1,1 +1,5 @@
 <?php
+/**
+ * @file
+ * Front-end interfaces that use the Google Analytics Reports API module.
+ */
