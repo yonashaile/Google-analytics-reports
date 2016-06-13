@@ -22,13 +22,13 @@ class GoogleAnalyticsNumeric extends GoogleAnalyticsBase {
    */
   public function defineOptions() {
     $options = parent::defineOptions();
-    $options['value'] = array(
-      'contains' => array(
-        'min' => array('default' => ''),
-        'max' => array('default' => ''),
-        'value' => array('default' => ''),
-      ),
-    );
+    $options['value'] = [
+      'contains' => [
+        'min' => ['default' => ''],
+        'max' => ['default' => ''],
+        'value' => ['default' => ''],
+      ],
+    ];
     return $options;
   }
 
@@ -36,44 +36,44 @@ class GoogleAnalyticsNumeric extends GoogleAnalyticsBase {
    * {@inheritdoc}
    */
   public function operators() {
-    $operators = array(
-      '<' => array(
+    $operators = [
+      '<' => [
         'title' => t('Is less than'),
         'method' => 'opSimple',
         'short' => t('<'),
         'values' => 1,
-      ),
-      '<=' => array(
+      ],
+      '<=' => [
         'title' => t('Is less than or equal to'),
         'method' => 'opSimple',
         'short' => t('<='),
         'values' => 1,
-      ),
-      '==' => array(
+      ],
+      '==' => [
         'title' => t('Is equal to'),
         'method' => 'opSimple',
         'short' => t('=='),
         'values' => 1,
-      ),
-      '!=' => array(
+      ],
+      '!=' => [
         'title' => t('Is not equal to'),
         'method' => 'opSimple',
         'short' => t('!='),
         'values' => 1,
-      ),
-      '>=' => array(
+      ],
+      '>=' => [
         'title' => t('Is greater than or equal to'),
         'method' => 'opSimple',
         'short' => t('>='),
         'values' => 1,
-      ),
-      '>' => array(
+      ],
+      '>' => [
         'title' => t('Is greater than'),
         'method' => 'opSimple',
         'short' => t('>'),
         'values' => 1,
-      ),
-    );
+      ],
+    ];
     return $operators;
   }
 
@@ -111,13 +111,13 @@ class GoogleAnalyticsNumeric extends GoogleAnalyticsBase {
     }
 
     if ($which == 'all') {
-      $form['value']['value'] = array(
+      $form['value']['value'] = [
         '#type' => 'textfield',
         '#title' => empty($values['exposed']) ? t('Value') : '',
         '#size' => 30,
         '#default_value' => $this->value['value'],
-        '#dependency' => array($source => $this->operatorValues(1)),
-      );
+        '#dependency' => [$source => $this->operatorValues(1)],
+      ];
       if (!empty($values['exposed']) && !isset($values['input'][$identifier]['value'])) {
         $values['input'][$identifier]['value'] = $this->value['value'];
       }
@@ -125,34 +125,34 @@ class GoogleAnalyticsNumeric extends GoogleAnalyticsBase {
     elseif ($which == 'value') {
       // When exposed we drop the value-value and just do value if
       // the operator is locked.
-      $form['value'] = array(
+      $form['value'] = [
         '#type' => 'textfield',
         '#title' => empty($values['exposed']) ? t('Value') : '',
         '#size' => 30,
         '#default_value' => $this->value['value'],
-      );
+      ];
       if (!empty($values['exposed']) && !isset($values['input'][$identifier])) {
         $values['input'][$identifier] = $this->value['value'];
       }
     }
 
     if ($which == 'all' || $which == 'minmax') {
-      $form['value']['min'] = array(
+      $form['value']['min'] = [
         '#type' => 'textfield',
         '#title' => empty($values['exposed']) ? t('Min') : '',
         '#size' => 30,
         '#default_value' => $this->value['min'],
-      );
-      $form['value']['max'] = array(
+      ];
+      $form['value']['max'] = [
         '#type' => 'textfield',
         '#title' => empty($values['exposed']) ? t('And max') : t('And'),
         '#size' => 30,
         '#default_value' => $this->value['max'],
-      );
+      ];
       if ($which == 'all') {
-        $dependency = array(
-          '#dependency' => array($source => $this->operatorValues(2)),
-        );
+        $dependency = [
+          '#dependency' => [$source => $this->operatorValues(2)],
+        ];
         $form['value']['min'] += $dependency;
         $form['value']['max'] += $dependency;
       }
@@ -165,10 +165,10 @@ class GoogleAnalyticsNumeric extends GoogleAnalyticsBase {
 
       if (!isset($form['value'])) {
         // Ensure there is something in the 'value'.
-        $form['value'] = array(
+        $form['value'] = [
           '#type' => 'value',
           '#value' => NULL,
-        );
+        ];
       }
     }
   }
@@ -191,7 +191,7 @@ class GoogleAnalyticsNumeric extends GoogleAnalyticsBase {
     $options = $this->operatorOptions('short');
     $output = Html::escape($options[$this->operator]);
     if (in_array($this->operator, $this->operatorValues(2))) {
-      $output .= ' ' . t('@min and @max', array('@min' => $this->value['min'], '@max' => $this->value['max']));
+      $output .= ' ' . t('@min and @max', ['@min' => $this->value['min'], '@max' => $this->value['max']]);
     }
     elseif (in_array($this->operator, $this->operatorValues(1))) {
       $output .= ' ' . Html::escape($this->value['value']);
@@ -214,9 +214,9 @@ class GoogleAnalyticsNumeric extends GoogleAnalyticsBase {
     if (!empty($this->options['expose']['identifier'])) {
       $value = &$input[$this->options['expose']['identifier']];
       if (!is_array($value)) {
-        $value = array(
+        $value = [
           'value' => $value,
-        );
+        ];
       }
     }
 
@@ -255,7 +255,7 @@ class GoogleAnalyticsNumeric extends GoogleAnalyticsBase {
    *   Operator keys.
    */
   public function operatorValues($values = 1) {
-    $options = array();
+    $options = [];
     foreach ($this->operators() as $id => $info) {
       if ($info['values'] == $values) {
         $options[] = $id;

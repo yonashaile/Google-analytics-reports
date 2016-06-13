@@ -92,13 +92,13 @@ function google_analytics_reports_views_data() {
         'float' => $float,
       ),
       'sort' => array(
-        'handler' => 'standard',
+        'id' => 'standard',
       ),
       'argument' => array(
-        'handler' => 'google_analytics_argument',
+        'id' => 'google_analytics_argument',
       ),
       'filter' => array(
-        'handler' => ($field->type == 'metric') ? 'google_analytics_numeric' : 'google_analytics_string',
+        'id' => ($field->type == 'metric') ? 'google_analytics_numeric' : 'google_analytics_string',
       ),
     );
   }

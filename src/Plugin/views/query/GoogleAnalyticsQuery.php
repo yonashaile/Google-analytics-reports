@@ -10,7 +10,6 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
-use Drupal\Core\Url;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
@@ -31,17 +30,17 @@ class GoogleAnalyticsQuery extends QueryPluginBase {
   /**
    * A list of tables in the order they should be added, keyed by alias.
    */
-  protected $tableQueue = array();
+  protected $tableQueue = [];
 
   /**
    * An array of fields.
    */
-  protected $fields = array();
+  protected $fields = [];
 
   /**
    * An array mapping table aliases and field names to field aliases.
    */
-  protected $fieldAliases = array();
+  protected $fieldAliases = [];
 
   /**
    * An array of sections of the WHERE query.
@@ -49,12 +48,12 @@ class GoogleAnalyticsQuery extends QueryPluginBase {
    * Each section is in itself an array of pieces and a flag as to whether
    * or not it should be AND or OR.
    */
-  protected $where = array();
+  protected $where = [];
 
   /**
    * A simple array of order by clauses.
    */
-  protected $orderby = array();
+  protected $orderby = [];
 
   /**
    * The default operator to use when connecting the WHERE groups.
@@ -122,7 +121,7 @@ class GoogleAnalyticsQuery extends QueryPluginBase {
    * @return string
    *   The name that this field can be referred to as.
    */
-  public function addField($table, $field, $alias = '', $params = array()) {
+  public function addField($table, $field, $alias = '', $params = []) {
     // We check for this specifically because it gets a special alias.
     if ($table == $this->view->storage->get('base_table') && $field == $this->view->storage->get('base_field') && empty($alias)) {
       $alias = $this->view->storage->get('base_field');
@@ -144,11 +143,11 @@ class GoogleAnalyticsQuery extends QueryPluginBase {
     $alias = substr($alias, 0, 60);
 
     // Create a field info array.
-    $field_info = array(
+    $field_info = [
       'field' => $field,
       'table' => $table,
       'alias' => $alias,
-    ) + $params;
+    ] + $params;
 
     // Test to see if the field is actually the same or not. Due to
     // differing parameters changing the aggregation function, we need
@@ -196,11 +195,11 @@ class GoogleAnalyticsQuery extends QueryPluginBase {
       $this->setWhereGroup('AND', $group);
     }
 
-    $this->where[$group]['conditions'][] = array(
+    $this->where[$group]['conditions'][] = [
       'field' => $field,
       'value' => $value,
       'operator' => $operator,
-    );
+    ];
   }
 
   /**
@@ -217,11 +216,11 @@ class GoogleAnalyticsQuery extends QueryPluginBase {
    * @param array $params
    *   Don't use this yet (at all?).
    */
-  public function addOrderBy($table, $field = NULL, $order = 'ASC', $alias = '', $params = array()) {
-    $this->orderby[] = array(
+  public function addOrderBy($table, $field = NULL, $order = 'ASC', $alias = '', $params = []) {
+    $this->orderby[] = [
       'field' => $field,
       'direction' => (strtoupper($order) == 'DESC') ? '-' : '',
-    );
+    ];
   }
 
   /**
@@ -229,11 +228,9 @@ class GoogleAnalyticsQuery extends QueryPluginBase {
    */
   public function query($get_count = FALSE) {
     $available_fields = google_analytics_reports_get_fields();
-    $query = array();
-
+    $query = [];
     foreach ($this->fields as $field) {
       $field_name = google_analytics_reports_variable_to_custom_field($field['field']);
-
       if ($available_fields[$field_name]) {
         $type = $available_fields[$field_name]->type;
         $type = ($type == 'dimension') ? 'dimensions' : 'metrics';
@@ -241,7 +238,7 @@ class GoogleAnalyticsQuery extends QueryPluginBase {
       }
     }
 
-    $filters = array();
+    $filters = [];
 
     if (isset($this->where)) {
       foreach ($this->where as $where_group => $where) {
@@ -251,7 +248,7 @@ class GoogleAnalyticsQuery extends QueryPluginBase {
           if ($field_name == 'start_date' || $field_name == 'end_date' || $field_name == 'profile_id') {
             $query[$field_name] = intval($condition['value']);
           }
-          elseif ($available_fields[$field_name]) {
+          elseif (!empty($available_fields[$field_name])) {
             $filters[$where_group][] = 'ga:' . $condition['field'] . $condition['operator'] . $condition['value'];
           }
         }
@@ -285,7 +282,7 @@ class GoogleAnalyticsQuery extends QueryPluginBase {
    * {@inheritdoc}
    */
   public function alter(ViewExecutable $view) {
-    $this->moduleHandler->invokeAll('views_query_alter', array($view, $this));
+    $this->moduleHandler->invokeAll('views_query_alter', [$view, $this]);
   }
 
   /**
@@ -317,100 +314,58 @@ class GoogleAnalyticsQuery extends QueryPluginBase {
 
     $query = $view->build_info['query'];
     $count_query = $view->build_info['count_query'];
-    $query->addMetaData('view', $view);
-    $count_query->addMetaData('view', $view);
+    $start = microtime(TRUE);
+
     // Query for total number of items.
     $count_query['max_results'] = 9999;
     $count_query['start_index'] = 1;
+    $count_feed = google_analytics_reports_api_report_data($count_query);
 
-    if ($query) {
-      // Count queries must be run through the preExecute() method.
-      // If not, then hook_query_node_access_alter() may munge the count by
-      // adding a distinct against an empty query string
-      // (e.g. COUNT DISTINCT(1) ...) and no pager will return.
-      // See pager.inc > PagerDefault::execute()
-      // http://api.drupal.org/api/drupal/includes--pager.inc/function/PagerDefault::execute/7
-      // See https://www.drupal.org/node/1046170.
-      $count_query->preExecute();
+    // Process only if data is available.
+    if (!empty($count_feed->results->rows)) {
+      $view->pager->total_items = count($count_feed->results->rows);
+      $view->pager->updatePageInfo();
 
-      // Build the count query.
-      $count_query = $count_query->countQuery();
-
-      $start = microtime(TRUE);
-
-      try {
-        if ($view->pager->useCountQuery() || !empty($view->get_total_rows)) {
-          $view->pager->executeCountQuery($count_query);
-        }
-
-        // Let the pager modify the query to add limits.
-        $view->pager->preExecute($query);
-
-        if (!empty($this->limit) || !empty($this->offset)) {
-          // We can't have an offset without a limit, so provide a very large limit instead.
-          $limit  = intval(!empty($this->limit) ? $this->limit : 999999);
-          $offset = intval(!empty($this->offset) ? $this->offset : 0);
-          $query->range($offset, $limit);
-        }
-
-        $count_feed = google_analytics_reports_api_report_data($count_query);
-
-        // Process only if data is available.
-        if (!empty($count_feed->results->rows)) {
-          $this->pager->total_items = count($count_feed->results->rows);
-          $this->pager->updatePageInfo();
-
-          // Adjust based on the pager's modifications to limit and offset.
-          if (!empty($this->limit) || !empty($this->offset)) {
-            $query['max_results'] = intval(!empty($this->limit) ? $this->limit : 1000);
-            $query['start_index'] = intval(!empty($this->offset) ? $this->offset : 0) + 1;
-          }
-
-          $feed = google_analytics_reports_api_report_data($query);
-
-          $result = $query->execute();
-          $view->pager->postExecute($view->result);
-
-          $rows = $feed->results->rows;
-          foreach ($rows as $row) {
-            $views_result[] = (object) $row;
-          }
-
-          $view->result = isset($views_result) ? $views_result : array();
-          $view->execute_time = microtime(TRUE) - $start;
-          if ($this->pager->usePager()) {
-            $view->total_rows = $view->pager->getTotalItems();
-          }
-
-          // Add to build_info['query'] to render query in Views UI query summary
-          // area.
-          $view->build_info['query'] = print_r($feed->results->query, TRUE);
-        }
-        else {
-          // Set empty query instead of current query array to prevent error
-          // in Views UI.
-          $view->build_info['query'] = '';
-          // Display the error from Google.
-          $response_data = drupal_json_decode($count_feed->response->data);
-          if (isset($response_data['error']['message'])) {
-            drupal_set_message($response_data['error']['message'], 'error');
-          }
-        }
+      // Adjust based on the pager's modifications to limit and offset.
+      if (!empty($this->limit) || !empty($this->offset)) {
+        $query['max_results'] = intval(!empty($this->limit) ? $this->limit : 1000);
+        $query['start_index'] = intval(!empty($this->offset) ? $this->offset : 0) + 1;
       }
-      catch (\Exception $e) {
-        $view->result = array();
-        if (!empty($view->live_preview)) {
-          drupal_set_message($e->getMessage(), 'error');
-        }
-        else {
-          watchdog_exception('google_analytics_reports', $e, $e->getMessage());
-        }
+
+      $feed = google_analytics_reports_api_report_data($query);
+
+      $rows = $feed->results->rows;
+
+      $views_result = [];
+      $count = 0;
+      foreach ($rows as $row) {
+        $count++;
+        $row['index'] = $count;
+        $views_result[] = new ResultRow($row);
       }
+
+      $view->result = isset($views_result) ? $views_result : [];
+      $view->execute_time = microtime(TRUE) - $start;
+      if ($view->pager->usePager()) {
+        $view->total_rows = $view->pager->getTotalItems();
+      }
+
+      // Add to build_info['query'] to render query in Views UI query summary
+      // area.
+      $view->build_info['query'] = print_r($feed->results->query, TRUE);
     }
     else {
-      $start = microtime(TRUE);
+      // Set empty query instead of current query array to prevent error
+      // in Views UI.
+      $view->build_info['query'] = '';
+      // Display the error from Google.
+      if (!empty($count_feed->response->data)) {
+        $response_data = json_decode($count_feed->response->data);
+        if (isset($response_data['error']['message'])) {
+          drupal_set_message($response_data['error']['message'], 'error');
+        }
+      }
     }
-    $view->execute_time = microtime(TRUE) - $start;
   }
 
   /**
@@ -423,14 +378,14 @@ class GoogleAnalyticsQuery extends QueryPluginBase {
     $profile_list = google_analytics_reports_api_profiles_list();
 
     if ($profile_list) {
-      $options['reports_profile'] = array(
+      $options['reports_profile'] = [
         'default' => FALSE,
         'translatable' => FALSE,
         'bool' => TRUE,
-      );
-      $options['profile_id'] = array(
+      ];
+      $options['profile_id'] = [
         'default' => $profile_list['profile_id'],
-      );
+      ];
     }
 
     return $options;
@@ -450,28 +405,36 @@ class GoogleAnalyticsQuery extends QueryPluginBase {
     }
 
     if ($profile_list) {
-      $form['reports_profile'] = array(
+      $form['reports_profile'] = [
         '#title' => t('Use another reports profile'),
-        '#description' => t('This view will use another reports profile rather than system default profile: %profile.', array(
+        '#description' => t('This view will use another reports profile rather than system default profile: %profile.', [
           '%profile' => $profile_info,
-        )),
+        ]),
         '#type' => 'checkbox',
         '#default_value' => !empty($this->options['reports_profile']),
-      );
-      $form['profile_id'] = array(
+      ];
+      $form['profile_id'] = [
         '#type' => 'select',
         '#title' => t('Reports profile'),
         '#options' => $profile_list['options'],
         '#description' => t('Choose your Google Analytics profile.'),
         '#default_value' => $this->options['profile_id'],
-        '#dependency' => array('edit-query-options-reports-profile' => '1'),
-      );
+        '#dependency' => ['edit-query-options-reports-profile' => '1'],
+      ];
     }
 
   }
 
+
   /**
-   * Ensure table exists.
+   * Make sure table exists.
+   *
+   * @param string $table
+   *   Table name.
+   * @param string $relationship
+   *   Relationship.
+   * @param string $join
+   *   Join.
    */
   public function ensureTable($table, $relationship = NULL, $join = NULL) {
   }

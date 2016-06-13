@@ -73,28 +73,6 @@ class GoogleAnalyticsWizard extends WizardPluginBase {
     $display_options['filters']['end_date']['group'] = 1;
     $display_options['filters']['end_date']['expose']['operator'] = FALSE;
 
-    // Add the title field, so that the display has content if the user switches
-    // to a row style that uses fields.
-    /* Field: Content: Title */
-/*    $display_options['fields']['title']['id'] = 'title';
-    $display_options['fields']['title']['table'] = 'node_field_data';
-    $display_options['fields']['title']['field'] = 'title';
-    $display_options['fields']['title']['entity_type'] = 'node';
-    $display_options['fields']['title']['entity_field'] = 'title';
-    $display_options['fields']['title']['label'] = '';
-    $display_options['fields']['title']['alter']['alter_text'] = 0;
-    $display_options['fields']['title']['alter']['make_link'] = 0;
-    $display_options['fields']['title']['alter']['absolute'] = 0;
-    $display_options['fields']['title']['alter']['trim'] = 0;
-    $display_options['fields']['title']['alter']['word_boundary'] = 0;
-    $display_options['fields']['title']['alter']['ellipsis'] = 0;
-    $display_options['fields']['title']['alter']['strip_tags'] = 0;
-    $display_options['fields']['title']['alter']['html'] = 0;
-    $display_options['fields']['title']['hide_empty'] = 0;
-    $display_options['fields']['title']['empty_zero'] = 0;
-    $display_options['fields']['title']['settings']['link_to_entity'] = 1;
-    $display_options['fields']['title']['plugin_id'] = 'field';*/
-
     return $display_options;
   }
 

@@ -58,7 +58,7 @@ class GoogleAnalyticsBase extends FilterPluginBase {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
     if ($this->isCustom) {
-      $form['custom_field_number'] = array(
+      $form['custom_field_number'] = [
         '#type' => 'textfield',
         '#title' => t('Custom field number'),
         '#default_value' => isset($this->options['custom_field_number']) ? $this->options['custom_field_number'] : 1,
@@ -66,7 +66,7 @@ class GoogleAnalyticsBase extends FilterPluginBase {
         '#maxlength' => 2,
         '#required' => TRUE,
         '#element_validate' => [Number::class, 'validateNumber'],
-      );
+      ];
     }
   }
 
@@ -74,7 +74,7 @@ class GoogleAnalyticsBase extends FilterPluginBase {
    * {@inheritdoc}
    */
   public function operatorOptions($which = 'title') {
-    $options = array();
+    $options = [];
     foreach ($this->operators() as $id => $info) {
       $options[$id] = $info[$which];
     }

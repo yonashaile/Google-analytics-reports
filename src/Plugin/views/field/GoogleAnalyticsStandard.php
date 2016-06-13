@@ -5,6 +5,7 @@
  */
 
 namespace Drupal\google_analytics_reports\Plugin\views\field;
+
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element\Number;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;

@@ -60,7 +60,7 @@ class GoogleAnalyticsPath extends ArgumentDefaultPluginBase implements Cacheable
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
-    $options['argument'] = array('default' => '');
+    $options['argument'] = ['default' => ''];
 
     return $options;
   }
@@ -70,11 +70,11 @@ class GoogleAnalyticsPath extends ArgumentDefaultPluginBase implements Cacheable
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
-    $form['argument'] = array(
+    $form['argument'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Fixed value'),
       '#default_value' => $this->options['argument'],
-    );
+    ];
   }
 
   /**

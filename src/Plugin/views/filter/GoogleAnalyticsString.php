@@ -5,6 +5,7 @@
  */
 
 namespace Drupal\google_analytics_reports\Plugin\views\filter;
+
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 
@@ -22,7 +23,7 @@ class GoogleAnalyticsString extends GoogleAnalyticsBase {
    */
   public function defineOptions() {
     $options = parent::defineOptions();
-    $options['expose']['contains']['required'] = array('default' => FALSE);
+    $options['expose']['contains']['required'] = ['default' => FALSE];
     return $options;
   }
 
@@ -36,44 +37,44 @@ class GoogleAnalyticsString extends GoogleAnalyticsBase {
    * {@inheritdoc}
    */
   public function operators() {
-    $operators = array(
-      '=' => array(
+    $operators = [
+      '=' => [
         'title' => t('Is equal to'),
         'short' => t('='),
         'method' => 'opEqual',
         'values' => 1,
-      ),
-      '!=' => array(
+      ],
+      '!=' => [
         'title' => t('Is not equal to'),
         'short' => t('!='),
         'method' => 'opInequal',
         'values' => 1,
-      ),
-      'contains' => array(
+      ],
+      'contains' => [
         'title' => t('Contains'),
         'short' => t('contains'),
         'method' => 'opContains',
         'values' => 1,
-      ),
-      'not' => array(
+      ],
+      'not' => [
         'title' => t('Does not contain'),
         'short' => t('!has'),
         'method' => 'opNot',
         'values' => 1,
-      ),
-      'regular_expression' => array(
+      ],
+      'regular_expression' => [
         'title' => t('Contains a match for the regular expression'),
         'short' => t('regex'),
         'method' => 'opRegex',
         'values' => 1,
-      ),
-      'not_regular_expression' => array(
+      ],
+      'not_regular_expression' => [
         'title' => t('Does not match regular expression'),
         'short' => t('!regex'),
         'method' => 'opNotRegex',
         'values' => 1,
-      ),
-    );
+      ],
+    ];
     return $operators;
   }
 
@@ -108,52 +109,88 @@ class GoogleAnalyticsString extends GoogleAnalyticsBase {
     }
 
     if ($which == 'all' || $which == 'value') {
-      $form['value'] = array(
+      $form['value'] = [
         '#type' => 'textfield',
         '#title' => t('Value'),
         '#size' => 30,
         '#default_value' => $this->value,
-      );
+      ];
       if (!empty($values['exposed']) && !isset($values['input'][$identifier])) {
         $values['input'][$identifier] = $this->value;
       }
 
       if ($which == 'all') {
-        $form['value'] += array(
-          '#dependency' => array($source => $this->operatorValues(1)),
-        );
+        $form['value'] += [
+          '#dependency' => [$source => $this->operatorValues(1)],
+        ];
       }
     }
 
     if (!isset($form['value'])) {
       // Ensure there is something in the 'value'.
-      $form['value'] = array(
+      $form['value'] = [
         '#type' => 'value',
         '#value' => NULL,
-      );
+      ];
     }
   }
 
+  /**
+   * Operation Equality.
+   *
+   * @param string $field
+   *   Field name.
+   */
   public function opEqual($field) {
     $this->query->addWhere($this->options['group'], $field, $this->value, '==');
   }
 
+  /**
+   * Operation non-equality.
+   *
+   * @param string $field
+   *   Field name.
+   */
   public function opInequal($field) {
     $this->query->addWhere($this->options['group'], $field, $this->value, '!=');
   }
 
+  /**
+   * Operation contains.
+   *
+   * @param string $field
+   *   Field name.
+   */
   public function opContains($field) {
     $this->query->addWhere($this->options['group'], $field, $this->value, '=@');
   }
 
+  /**
+   * Operation not.
+   *
+   * @param string $field
+   *   Field name.
+   */
   public function opNot($field) {
     $this->query->addWhere($this->options['group'], $field, $this->value, '!@');
   }
 
+  /**
+   * Operation regex match.
+   *
+   * @param string $field
+   *   Field name.
+   */
   public function opRegex($field) {
     $this->query->addWhere($this->options['group'], $field, $this->value, '=~');
   }
 
+  /**
+   * Operation regex not match.
+   *
+   * @param string $field
+   *   Field name.
+   */
   public function opNotRegex($field) {
     $this->query->addWhere($this->options['group'], $field, $this->value, '!~');
   }
@@ -187,7 +224,7 @@ class GoogleAnalyticsString extends GoogleAnalyticsBase {
    *   Operator keys.
    */
   public function operatorValues($values = 1) {
-    $options = array();
+    $options = [];
     foreach ($this->operators() as $id => $info) {
       if (isset($info['values']) && $info['values'] == $values) {
         $options[] = $id;

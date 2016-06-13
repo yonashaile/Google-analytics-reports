@@ -180,7 +180,7 @@ class GoogleAnalyticsReportsAdminSettingsForm extends GoogleAnalyticsReportsApiA
       }
     }
     else {
-      drupal_set_message(t('An error has occurred: @error.', array('@error' => $response->getStatusCode())), 'error');
+      drupal_set_message(t('An error has occurred: @error.', ['@error' => $response->getStatusCode()]), 'error');
     }
   }
 
@@ -243,7 +243,7 @@ class GoogleAnalyticsReportsAdminSettingsForm extends GoogleAnalyticsReportsApiA
       }
     }
     else {
-      drupal_set_message(t('There is a error during request to Google Analytics Metadata API: @error', array('@error' => $response->getStatusCode())), 'error');
+      drupal_set_message(t('There is a error during request to Google Analytics Metadata API: @error', ['@error' => $response->getStatusCode()]), 'error');
     }
   }
 
@@ -271,7 +271,7 @@ class GoogleAnalyticsReportsAdminSettingsForm extends GoogleAnalyticsReportsApiA
     $this->moduleHandler->alter('google_analytics_reports_field_import', $field);
 
     $this->databaseConnection->insert('google_analytics_reports_fields')
-      ->fields(array(
+      ->fields([
         'gaid' => $field['id'],
         'type' => $attributes['type'],
         'data_type' => $attributes['dataType'],
@@ -279,7 +279,7 @@ class GoogleAnalyticsReportsAdminSettingsForm extends GoogleAnalyticsReportsApiA
         'ui_name' => $attributes['uiName'],
         'description' => $attributes['description'],
         'calculation' => $attributes['calculation'],
-      ))
+      ])
       ->execute();
     $context['results'][] = $field['id'];
   }
@@ -294,7 +294,7 @@ class GoogleAnalyticsReportsAdminSettingsForm extends GoogleAnalyticsReportsApiA
    */
   public function importFieldsFinished($success, $results) {
     if ($success) {
-      drupal_set_message(t('Imported @count Google Analytics fields.', array('@count' => count($results))));
+      drupal_set_message(t('Imported @count Google Analytics fields.', ['@count' => count($results)]));
       // Menu links in module's views are not shown by default.
       // Clear cache because it may be empty during module installing.
       // Update views data.

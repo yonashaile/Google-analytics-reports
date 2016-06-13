@@ -13,7 +13,7 @@ use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\ViewExecutable;
 
 /**
- * Defines a contextual filter for doing fulltext searches.
+ * Provides base argument functionality for Google Analytics fields.
  *
  * @ingroup views_argument_handlers
  *
@@ -42,7 +42,7 @@ class GoogleAnalyticsArgument extends ArgumentPluginBase {
 
     if ($this->isCustom) {
       $options['default_argument_type']['default'] = 'google_analytics_path';
-      $options['custom_field_number'] = array('default' => 1);
+      $options['custom_field_number'] = ['default' => 1];
     }
     return $options;
   }
@@ -53,7 +53,7 @@ class GoogleAnalyticsArgument extends ArgumentPluginBase {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
     if ($this->isCustom) {
-      $form['custom_field_number'] = array(
+      $form['custom_field_number'] = [
         '#type' => 'textfield',
         '#title' => t('Custom field number'),
         '#default_value' => isset($this->options['custom_field_number']) ? $this->options['custom_field_number'] : 1,
@@ -61,7 +61,7 @@ class GoogleAnalyticsArgument extends ArgumentPluginBase {
         '#maxlength' => 2,
         '#required' => TRUE,
         '#element_validate' => [Number::class, 'validateNumber'],
-      );
+      ];
     }
   }
 

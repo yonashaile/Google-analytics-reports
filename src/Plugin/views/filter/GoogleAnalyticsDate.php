@@ -22,12 +22,12 @@ class GoogleAnalyticsDate extends Date {
    */
   public function operators() {
     $operators = [
-      '=' => array(
+      '=' => [
         'title' => $this->t('Is equal to'),
         'method' => 'opSimple',
         'short' => $this->t('='),
         'values' => 1,
-      ),
+      ],
     ];
     return $operators;
   }
